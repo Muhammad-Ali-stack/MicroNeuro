@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  displayName        String?
+  createdAt          DateTime             @default(now())
+  processedEmails    ProcessedEmail[]
+  deadlines          Deadline[]
+  alerts             Alert[]
+  settings           Settings?
+  webhookSubscriptions WebhookSubscription[]
+  connectedAccounts  ConnectedAccount[]
+}
+
+model ConnectedAccount {
+  id                 String   @id @default(cuid())
+  appUserId          String
+  microsoftAccountId String   @unique
+  email              String
+  displayName        String?
+  isActive           Boolean  @default(false)
+  connectedAt        DateTime @default(now())
+
+  appUser            User            @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+  processedEmails    ProcessedEmail[]
+  meetings           Meeting[]
+  deadlines          Deadline[]
+  actionItems        ActionItem[]
+
+  @@index([appUserId, isActive])
+  @@index([appUserId])
+}
+
+model ProcessedEmail {
+  id                 String           @id @default(cuid())
+  userId             String
+  connectedAccountId String
+  graphMessageId     String           @unique
+  subject            String?
+  fromAddress        String?
+  receivedAt         DateTime
+  processedAt        DateTime         @default(now())
+  emailType          String?
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectedAccount   ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
+  meetings           Meeting[]
+  deadlines          Deadline[]
+  actionItems        ActionItem[]
+
+  @@index([userId, processedAt])
+  @@index([connectedAccountId, processedAt])
+}
+
+model Meeting {
+  id                  String           @id @default(cuid())
+  emailId             String
+  connectedAccountId  String
+  subject             String
+  date                DateTime?
+  time                String?
+  participants        String[]         @default([])
+  agenda              String?
+  momStatus           String           @default("pending")
+  email               ProcessedEmail   @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  connectedAccount    ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
+
+  @@index([emailId])
+  @@index([connectedAccountId])
+}
+
+model Deadline {
+  id                  String           @id @default(cuid())
+  emailId             String?
+  userId              String
+  connectedAccountId  String
+  description         String
+  dueDate             DateTime
+  status              String           @default("upcoming")
+  email               ProcessedEmail?  @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectedAccount    ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
+
+  @@index([status, dueDate])
+  @@index([emailId])
+  @@index([userId, status, dueDate])
+  @@index([connectedAccountId, status, dueDate])
+}
+
+model ActionItem {
+  id                  String           @id @default(cuid())
+  emailId             String
+  connectedAccountId  String
+  description         String
+  owner               String?
+  status              String           @default("open")
+  email               ProcessedEmail   @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  connectedAccount    ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([emailId])
+  @@index([connectedAccountId])
+}
+
+model Alert {
+  id         String   @id @default(cuid())
+  userId     String
+  sourceType String
+  sourceId   String
+  message    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@index([sourceType, sourceId, isRead])
+}
+
+model Settings {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  alertLeadTimeHours Int      @default(24)
+  foldersToScan      String[] @default(["inbox"])
+  notifyByEmail      Boolean  @default(false)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WebhookSubscription {
+  id                   String   @id @default(cuid())
+  userId               String
+  graphSubscriptionId  String   @unique
+  resource             String
+  expiresAt            DateTime
+  createdAt            DateTime @default(now())
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId])
+}

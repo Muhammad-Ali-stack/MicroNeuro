@@ -1,0 +1,52 @@
+{
+  "name": "microneuro",
+  "version": "1.1.1",
+  "main": "server/api/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/api/server.js",
+    "start:mcp": "node server/index.js",
+    "auth:bootstrap": "node server/auth/bootstrap.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:benchmark": "vitest run server/tests/utils/LRUCache.benchmark.js",
+    "test:graph": "node server/test/testGraphClient.js"
+  },
+  "keywords": [
+    "outlook",
+    "microsoft-graph",
+    "ai-assistant",
+    "email-automation",
+    "groq"
+  ],
+  "author": "Muhammad Ali <muhammadbvs2021@gmail.com>",
+  "dependencies": {
+    "@azure/identity": "^4.10.2",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "@prisma/client": "^6.19.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.1.0",
+    "express": "^5.2.1",
+    "groq-sdk": "^1.5.0",
+    "helmet": "^8.3.0",
+    "isomorphic-dompurify": "^2.26.0",
+    "node-cron": "^4.6.0",
+    "node-persist": "^4.0.4",
+    "officeparser": "^5.2.0",
+    "prisma": "^6.19.0",
+    "undici": "^7.29.0",
+    "xlsx": "^0.18.5"
+  },
+  "optionalDependencies": {
+    "keytar": "^7.9.0"
+  },
+  "description": "MicroNeuro is an AI-powered Outlook assistant that reads a user's inbox to extract meetings, deadlines, and action items into a centralized dashboard, and can create calendar events or send emails directly from natural language prompts. Built on the Microsoft Graph API and Groq (Llama 3.3), with multi-account support and automated deadline alerts.",
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}
